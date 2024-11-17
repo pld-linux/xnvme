@@ -1,0 +1,243 @@
+--- xnvme-0.7.5/include/libxnvme_spec_fs.h.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/include/libxnvme_spec_fs.h	2024-11-16 15:26:57.379119585 +0100
+@@ -63,6 +63,8 @@ struct xnvme_spec_fs_idfy_ctrlr {
+ 
+ 	uint8_t ac;
+ 	uint8_t dc;
++
++	uint8_t rsvd2_[5];
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct xnvme_spec_fs_idfy_ctrlr) == 4096, "Incorrect size")
+ 
+--- xnvme-0.7.5/include/libxnvme_cmd.h.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/include/libxnvme_cmd.h	2024-11-16 15:30:31.957957112 +0100
+@@ -27,6 +27,9 @@ struct xnvme_cmd_ctx {
+ 	struct xnvme_spec_cpl cpl;        ///< Completion result from processing
+ 	struct xnvme_dev *dev;            ///< Device associated with the command
+ 	struct xnvme_cmd_ctx_async async; ///< Fields for command option: XNVME_CMD_ASYNC
++#ifndef __LP64__
++	uint32_t padding_[4];
++#endif
+ 	///< Field containing command-options, the field is initialized by helper-functions
+ 	uint32_t opts;
+ 
+--- xnvme-0.7.5/include/libxnvme_be.h.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/include/libxnvme_be.h	2024-11-16 18:19:03.383178820 +0100
+@@ -13,6 +13,9 @@
+  */
+ struct xnvme_be_attr {
+ 	const char *name; ///< Backend name
++#ifndef __LP64__
++	uint32_t padding_;
++#endif
+ 
+ 	uint8_t enabled; ///< Whether the backend is 'enabled'
+ 
+--- xnvme-0.7.5/include/xnvme_be.h.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/include/xnvme_be.h	2024-11-16 18:23:41.288339945 +0100
+@@ -51,6 +51,9 @@ struct xnvme_be_async {
+ 
+ 	// Check if the backend is supported in the current environment
+ 	const char *id;
++#ifndef __LP64__
++	uint32_t padding_[8];
++#endif
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_async) == XNVME_BE_ASYNC_NBYTES, "Incorrect size")
+ 
+@@ -68,6 +71,9 @@ struct xnvme_be_sync {
+ 	int (*cmd_iov)(struct xnvme_cmd_ctx *, struct iovec *, size_t, size_t, void *, size_t);
+ 
+ 	const char *id;
++#ifndef __LP64__
++	uint32_t padding_[3];
++#endif
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_sync) == XNVME_BE_SYNC_NBYTES, "Incorrect size")
+ 
+@@ -86,6 +92,9 @@ struct xnvme_be_admin {
+ 	int (*cmd_pseudo)(struct xnvme_cmd_ctx *, void *, size_t, void *, size_t);
+ 
+ 	const char *id;
++#ifndef __LP64__
++	uint32_t padding_[3];
++#endif
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_admin) == XNVME_BE_ADMIN_NBYTES, "Incorrect size")
+ 
+@@ -104,6 +113,9 @@ struct xnvme_be_dev {
+ 	 * Close the given device
+ 	 */
+ 	void (*dev_close)(struct xnvme_dev *);
++#ifndef __LP64__
++	uint32_t padding_[3];
++#endif
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_dev) == XNVME_BE_DEV_NBYTES, "Incorrect size")
+ 
+@@ -138,6 +150,9 @@ struct xnvme_be_mem {
+ 	 */
+ 	int (*mem_unmap)(const struct xnvme_dev *, void *);
+ 	const char *id;
++#ifndef __LP64__
++	uint32_t padding_[7];
++#endif
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_mem) == XNVME_BE_MEM_NBYTES, "Incorrect size")
+ 
+@@ -209,6 +224,9 @@ struct xnvme_be {
+ 	uint8_t state[XNVME_BE_STATE_NBYTES]; ///< Backend instance state
+ 
+ 	struct xnvme_be_mixin *objs;
++#ifndef __LP64__
++	uint32_t padding_;
++#endif
+ 	uint64_t nobjs;
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct xnvme_be) == XNVME_BE_NBYTES, "Incorrect size")
+--- xnvme-0.7.5/include/xnvme_queue.h.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/include/xnvme_queue.h	2024-11-16 19:03:50.955285659 +0100
+@@ -24,19 +24,33 @@ struct xnvme_cmd_ctx_entry {
+ 		void *cb_arg;
+ 	} async;
+ 
++#ifndef __LP64__
++	uint32_t padding_[4];
++#endif
++
+ 	uint32_t opts;
+ 
+ 	uint32_t id;
+ 
+ 	SLIST_ENTRY(xnvme_cmd_ctx_entry) link;
++
++#ifndef __LP64__
++	uint32_t padding2_;
++#endif
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct xnvme_cmd_ctx_entry) == 128, "Incorrect size")
+ 
+ struct xnvme_queue_base {
+ 	struct xnvme_dev *dev; ///< Device on which the queue operates
++#ifndef __LP64__
++	uint32_t padding_;
++#endif
+ 	uint32_t capacity;     ///< Maximum number of outstanding commands
+ 	uint32_t outstanding;  ///< Number of currently outstanding commands
+ 	SLIST_HEAD(, xnvme_cmd_ctx_entry) pool;
++#ifndef __LP64__
++	uint32_t padding2_;
++#endif
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct xnvme_queue_base) == 24, "Incorrect size")
+ 
+--- xnvme-0.7.5/lib/xnvme_be_cbi_async_emu.c.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/lib/xnvme_be_cbi_async_emu.c	2024-11-16 21:04:14.062821394 +0100
+@@ -41,6 +41,9 @@ struct xnvme_queue_emu {
+ 	struct xnvme_queue_base base;
+ 
+ 	struct qpair *qp;
++#ifndef __LP64__
++	uint32_t padding_;
++#endif
+ 
+ 	uint8_t _rsvd[224];
+ };
+--- xnvme-0.7.5/lib/xnvme_be_cbi_async_nil.c.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/lib/xnvme_be_cbi_async_nil.c	2024-11-16 21:05:34.692384586 +0100
+@@ -18,6 +18,10 @@ struct nil_queue {
+ 	struct xnvme_queue_base base;
+ 
+ 	struct xnvme_cmd_ctx *ctx[XNVME_BE_CBI_ASYNC_NIL_CTX_DEPTH_MAX];
++
++#ifndef __LP64__
++	uint32_t padding_[XNVME_BE_CBI_ASYNC_NIL_CTX_DEPTH_MAX];
++#endif
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct nil_queue) == XNVME_BE_QUEUE_STATE_NBYTES, "Incorrect size")
+ 
+--- xnvme-0.7.5/lib/xnvme_be_cbi_async_thrpool.c.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/lib/xnvme_be_cbi_async_thrpool.c	2024-11-16 21:12:52.396680005 +0100
+@@ -46,12 +46,18 @@ struct xnvme_queue_thrpool {
+ 	struct xnvme_queue_base base;
+ 
+ 	struct _thrpool_qp *qp;
++#ifndef __LP64__
++	uint32_t padding_;
++#endif
+ 
+ 	bool threads_stop;
+ 	int nthreads;
+ 	pthread_t *threads;
++#ifndef __LP64__
++	uint32_t padding2_;
++#endif
+ 
+-	uint8_t _rsvd[204];
++	uint8_t _rsvd[208];
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct xnvme_queue_thrpool) == XNVME_BE_QUEUE_STATE_NBYTES,
+ 		    "Incorrect size")
+--- xnvme-0.7.5/lib/xnvme_be_cbi_async_posix.c.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/lib/xnvme_be_cbi_async_posix.c	2024-11-16 21:18:46.981425721 +0100
+@@ -21,8 +21,11 @@ struct posix_queue {
+ 	TAILQ_HEAD(, posix_request) reqs_ready;
+ 	TAILQ_HEAD(, posix_request) reqs_outstanding;
+ 	struct posix_request *reqs_storage;
++#ifndef __LP64__
++	uint32_t padding_[5];
++#endif
+ 
+-	uint8_t rsvd[188];
++	uint8_t rsvd[192];
+ };
+ XNVME_STATIC_ASSERT(sizeof(struct posix_queue) == XNVME_BE_QUEUE_STATE_NBYTES, "Incorrect size")
+ 
+--- xnvme-0.7.5/include/xnvme_be_linux_libaio.h.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/include/xnvme_be_linux_libaio.h	2024-11-16 21:19:49.414420826 +0100
+@@ -11,6 +11,9 @@ struct xnvme_queue_libaio {
+ 
+ 	io_context_t aio_ctx;
+ 	struct io_event *aio_events;
++#ifndef __LP64__
++	uint32_t padding_[2];
++#endif
+ 
+ 	uint8_t poll_io;
+ 	uint8_t rsvd[212];
+--- xnvme-0.7.5/include/xnvme_be_linux_liburing.h.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/include/xnvme_be_linux_liburing.h	2024-11-16 21:24:58.599412494 +0100
+@@ -13,6 +13,9 @@ struct xnvme_queue_liburing {
+ 	struct xnvme_queue_base base;
+ 
+ 	struct io_uring ring;
++#ifndef __LP64__
++	uint32_t padding_[19];
++#endif
+ 
+ 	uint8_t poll_io;
+ 	uint8_t poll_sq;
+--- xnvme-0.7.5/include/xnvme_be_ramdisk.h.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/include/xnvme_be_ramdisk.h	2024-11-16 21:30:54.530817581 +0100
+@@ -6,6 +6,9 @@
+ #define __INTERNAL_XNVME_BE_RAMDISK_H
+ struct xnvme_be_ramdisk_state {
+ 	void *ramdisk;
++#ifndef __LP64__
++	uint32_t padding_;
++#endif
+ 
+ 	uint8_t _rsvd[120];
+ };
+--- xnvme-0.7.5/include/xnvme_be_windows.h.orig	2024-09-11 13:56:13.000000000 +0200
++++ xnvme-0.7.5/include/xnvme_be_windows.h	2024-11-16 21:32:14.007053688 +0100
+@@ -23,6 +23,9 @@ struct xnvme_be_windows_opts {
+ struct xnvme_be_windows_state {
+ 	void *sync_handle;
+ 	void *async_handle;
++#ifndef __LP64__
++	uint32_t padding_[2];
++#endif
+ 	int fd;
+ 	uint8_t _rsvd[108]; ///< reserved space
+ };
